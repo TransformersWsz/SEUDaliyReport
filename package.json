@@ -1,0 +1,15 @@
+{
+  "name": "seudaliyreport",
+  "version": "1.0.0",
+  "description": "东南大学全校师生每日健康申报自动化",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Swift",
+  "license": "ISC",
+  "dependencies": {
+    "nodemailer": "^6.4.6",
+    "puppeteer": "^3.0.0"
+  }
+}
