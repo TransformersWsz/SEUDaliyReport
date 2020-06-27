@@ -67,7 +67,7 @@ const emailInform = () => {
     };
 
     transporter.sendMail(mailOpt, (err, info) => {
-        if (err) 
+        if (err)
             console.log("邮件发送失败。。。");
         else
             console.log(`邮件(id: ${info.messageId}) 发送成功！`);
@@ -75,7 +75,7 @@ const emailInform = () => {
 };
 
 (async () => {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setViewport({ width: 1500, height: 968 });
 
@@ -85,7 +85,7 @@ const emailInform = () => {
         try {
             await page.goto("http://ehall.seu.edu.cn/new/index.html");
             await page.waitFor(3000);
-            login = await page.waitForSelector("#ampHasNoLogin");
+            let login = await page.waitForSelector("#ampHasNoLogin");
             await login.click();
             await page.waitForNavigation();
             break;
@@ -113,35 +113,47 @@ const emailInform = () => {
             // 进入基本信息填写
             add = await page.waitForSelector("body > main > article > section > div.bh-mb-16 > div.bh-btn.bh-btn-primary");
             await add.click();
+
+            await page.waitFor(2000)
+
+            try {
+                isReported = await page.waitForSelector(".bh-bhdialog-container > div.bh-modal > div.bh-pop.bh-card.bh-card-lv4.bh-dialog-con > div.bh-dialog-center > div.bh-dialog-btnContainerBox > a", {timeout: 5000});
+                await isReported.click();    // 今日健康信息已填报
+                console.log("今日已填报！");
+            } catch (e) {
+                console.log("开始填报信息");
+
+                await page.waitFor(3000);
+
+                // 填报今日信息
+                await autoScroll(page);
+                await page.waitFor(3000);
+
+                save = await page.waitForSelector("#save");
+                console.log("保存按钮已加载");
+                await save.click();    // 此时触发 .jqx-validator-error-control 样式，这样就可以选择input框
+
+                await page.waitFor(2000);
+
+                await page.$eval(".jqx-validator-error-control", temperature => temperature.value = "36.5");
+
+                await page.waitFor(2000);
+
+                await save.click();    // 再次点击保存按钮提交
+
+                submit = await page.waitForSelector(".bh-bhdialog-container > div.bh-modal > div.bh-pop.bh-card.bh-card-lv4.bh-dialog-con > div.bh-dialog-center > div.bh-dialog-btnContainerBox > a.bh-dialog-btn.bh-bg-primary.bh-color-primary-5");
+                console.log("确定数据并提交吗？");
+                await submit.click();
+                console.log("今日情况申报完成！");
+                await page.waitFor(3000);
+            }
             break;
         } catch (e) {
+            console.log(e);
             console.log("超时");
         }
     }
 
-    await page.waitFor(2000)
-
-    try {
-        isReported = await page.waitForSelector(".bh-bhdialog-container > div.bh-modal > div.bh-pop.bh-card.bh-card-lv4.bh-dialog-con > div.bh-dialog-center > div.bh-dialog-btnContainerBox > a");
-        await isReported.click();    // 今日健康信息已填报
-        console.log("今日已填报！");
-    } catch (e) {
-        // 填报今日信息
-        await autoScroll(page);
-        await page.waitFor(3000);
-
-        save = await page.waitForSelector("#save");
-        console.log("保存按钮已加载");
-        await save.click();
-
-        await page.waitFor(2000);
-
-        submit = await page.waitForSelector(".bh-bhdialog-container > div.bh-modal > div.bh-pop.bh-card.bh-card-lv4.bh-dialog-con > div.bh-dialog-center > div.bh-dialog-btnContainerBox > a.bh-dialog-btn.bh-bg-primary.bh-color-primary-5");
-        console.log("确定数据并提交吗？");
-        await submit.click();
-        console.log("今日情况申报完成！");
-        await page.waitFor(3000);
-    }
 
     while (true) {
         // 登出
@@ -155,9 +167,9 @@ const emailInform = () => {
             console.log("安全退出");
             await page.waitFor(2000);
             await browser.close();
-            
+
             emailInform();
-            
+
             break;
         } catch (e) {
             console.log("未找到退出按钮，重新加载页面");
