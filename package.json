@@ -9,7 +9,7 @@
   "author": "Swift",
   "license": "ISC",
   "dependencies": {
-    "nodemailer": "^6.4.6",
+    "nodemailer": "^6.4.16",
     "puppeteer": "^3.0.0"
   }
 }
